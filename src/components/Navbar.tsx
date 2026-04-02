@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   return (
@@ -11,9 +12,9 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground font-sans">
+          <Link to="/cv" className="hover:text-foreground transition-colors">CV Builder</Link>
+          <Link to="/cover-letter" className="hover:text-foreground transition-colors">Cover Letter</Link>
           <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-          <a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a>
-          <a href="#about" className="hover:text-foreground transition-colors">About</a>
         </div>
 
         <div className="flex items-center gap-3">
