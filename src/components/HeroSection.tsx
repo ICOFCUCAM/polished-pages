@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroImage from "@/assets/hero-abstract.jpg";
 
 const HeroSection = () => {
@@ -50,9 +51,11 @@ const HeroSection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button variant="hero" size="lg" className="text-base px-8 py-6">
-              Get Started Free
-              <ArrowRight className="w-5 h-5 ml-1" />
+            <Button variant="hero" size="lg" className="text-base px-8 py-6" asChild>
+              <Link to="/cv">
+                Get Started Free
+                <ArrowRight className="w-5 h-5 ml-1" />
+              </Link>
             </Button>
             <Button variant="heroOutline" size="lg" className="text-base px-8 py-6">
               See How It Works
