@@ -69,13 +69,13 @@ const HeroSection = () => {
 
   const imageVariants = {
     enter: { opacity: 0, scale: 1.1 },
-    center: { opacity: 1, scale: 1, transition: { duration: 1, ease: "easeOut" } },
+    center: { opacity: 1, scale: 1, transition: { duration: 1, ease: "easeOut" as const } },
     exit: { opacity: 0, scale: 1.05, transition: { duration: 0.6 } },
   };
 
   const textVariants = {
     enter: (d: number) => ({ opacity: 0, y: d > 0 ? 40 : -40 }),
-    center: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+    center: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
     exit: (d: number) => ({ opacity: 0, y: d > 0 ? -30 : 30, transition: { duration: 0.4 } }),
   };
 
