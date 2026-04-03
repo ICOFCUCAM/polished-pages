@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import CVGenerator from "./pages/CVGenerator.tsx";
 import CoverLetterGenerator from "./pages/CoverLetterGenerator.tsx";
+import BookCreator from "./pages/BookCreator.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
