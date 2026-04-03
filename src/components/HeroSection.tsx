@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, FileText, PenTool, BookOpen } from "lucide-react";
+import { ArrowRight, FileText, PenTool, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import heroCv from "@/assets/hero-cv.jpg";
-import heroCoverLetter from "@/assets/hero-cover-letter.jpg";
-import heroBook from "@/assets/hero-book.jpg";
+import heroCv from "@/assets/hero-cv-light.jpg";
+import heroCoverLetter from "@/assets/hero-letter-light.jpg";
+import heroBook from "@/assets/hero-book-light.jpg";
 
 const slides = [
   {
@@ -68,9 +68,9 @@ const HeroSection = () => {
   const Icon = slide.icon;
 
   const imageVariants = {
-    enter: { opacity: 0, scale: 1.1 },
+    enter: { opacity: 0, scale: 1.05 },
     center: { opacity: 1, scale: 1, transition: { duration: 1, ease: "easeOut" as const } },
-    exit: { opacity: 0, scale: 1.05, transition: { duration: 0.6 } },
+    exit: { opacity: 0, scale: 1.02, transition: { duration: 0.6 } },
   };
 
   const textVariants = {
@@ -94,16 +94,16 @@ const HeroSection = () => {
           <img
             src={slide.image}
             alt={slide.badge}
-            className="w-full h-full object-cover opacity-25"
+            className="w-full h-full object-cover opacity-40"
             width={1920}
             height={1080}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/70 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-background/70 to-background" />
         </motion.div>
       </AnimatePresence>
 
       {/* Gold accent */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gold-gradient opacity-40" />
+      <div className="absolute top-0 left-0 right-0 h-px bg-gold-gradient opacity-60" />
 
       <div className="container relative z-10 px-6 py-20">
         <AnimatePresence mode="wait" custom={direction}>
@@ -117,12 +117,12 @@ const HeroSection = () => {
             className="max-w-4xl mx-auto text-center"
           >
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/5 px-4 py-1.5 mb-8">
-              <Icon className="w-4 h-4 text-gold" />
-              <span className="text-sm text-gold-light font-medium font-sans">{slide.badge}</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 mb-8">
+              <Icon className="w-4 h-4 text-primary" />
+              <span className="text-sm text-primary font-medium font-sans">{slide.badge}</span>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] mb-6">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] mb-6 text-foreground">
               {slide.title}{" "}
               <span className="text-gradient-gold italic">{slide.highlight}</span>
             </h1>
@@ -156,7 +156,7 @@ const HeroSection = () => {
             >
               <div
                 className={`relative h-1.5 rounded-full transition-all duration-500 overflow-hidden ${
-                  i === current ? "w-10 bg-gold/30" : "w-6 bg-border hover:bg-muted-foreground/30"
+                  i === current ? "w-10 bg-primary/20" : "w-6 bg-border hover:bg-muted-foreground/30"
                 }`}
               >
                 {i === current && (
