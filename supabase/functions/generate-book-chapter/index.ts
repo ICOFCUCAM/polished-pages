@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { bookTitle, genre, targetAudience, chapters, chapterIndex } = await req.json();
+    const { bookTitle, genre, targetAudience, chapters, chapterIndex, depth, previousChapters } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -24,17 +24,40 @@ serve(async (req) => {
       .map((ch: any, i: number) => `${i + 1}. ${ch.title}${ch.summary ? ` – ${ch.summary}` : ""}`)
       .join("\n");
 
+    // Build anti-repetition context from previous chapters
+    const prevContext = previousChapters?.length
+      ? `\n\nPREVIOUSLY COVERED (DO NOT REPEAT these ideas/examples):\n${previousChapters.map((p: string, i: number) => `Ch${i + 1} key points: ${p.substring(0, 500)}`).join("\n")}`
+      : "";
+
+    const depthGuide = {
+      short: "Write a focused chapter of 1500-2000 words. Be concise but impactful.",
+      standard: "Write a thorough chapter of 2500-3500 words with detailed explanations.",
+      detailed: "Write a comprehensive chapter of 3500-5000 words with extensive examples and analysis.",
+    }[depth || "standard"];
+
     const systemPrompt = `You are a bestselling author and ghostwriter. Write compelling, publication-ready book chapters.
 
 RULES:
-- Write in a style appropriate for the genre: ${genre || "general non-fiction"}
+- Genre: ${genre || "general non-fiction"}
 - Target audience: ${targetAudience || "general readers"}
-- Write the FULL chapter content (2000-3000 words minimum)
-- Use vivid language, strong narrative flow, and engaging prose
-- Include section breaks with ### where appropriate
-- Do NOT include meta-commentary or instructions
-- Start with the chapter title as a ## heading
-- Make each chapter self-contained but connected to the overall narrative`;
+- ${depthGuide}
+
+CHAPTER QUALITY REQUIREMENTS:
+1. HOOK: Start with a powerful, specific hook (story, question, statistic, bold claim). NEVER start with "In this chapter..." or generic introductions.
+2. SECTIONS: Use ### for clear section breaks. Each section should have a distinct purpose.
+3. EXAMPLES: Include at least 2-3 real-world examples, case studies, or scenarios.
+4. INSIGHTS: Provide actionable, practical insights readers can apply immediately.
+5. FLOW: Use short paragraphs (2-4 sentences). Vary sentence length. Create momentum.
+6. ENDING: End with a powerful summary, key takeaways, or action steps.
+
+ANTI-REPETITION: Each idea, example, and explanation must be UNIQUE to this chapter.${prevContext}
+
+FORMAT:
+- Start with ## Chapter Title
+- Use ### for sections
+- Use **bold** for emphasis
+- Use - for bullet lists where appropriate
+- Do NOT include meta-commentary or instructions`;
 
     const userPrompt = `Book: "${bookTitle}"
 
@@ -44,6 +67,8 @@ ${outlineContext}
 Now write Chapter ${chapterIndex + 1}: "${chapter.title}"
 ${chapter.summary ? `\nChapter brief: ${chapter.summary}` : ""}
 ${chapter.notes ? `\nAuthor notes: ${chapter.notes}` : ""}
+${chapter.keyPoints?.length ? `\nKey points to cover: ${chapter.keyPoints.join(", ")}` : ""}
+${chapter.hook ? `\nSuggested hook concept: ${chapter.hook}` : ""}
 
 Write the complete chapter now.`;
 
