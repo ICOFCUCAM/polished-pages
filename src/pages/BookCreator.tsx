@@ -1,67 +1,104 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Sparkles, ArrowLeft, Loader2, Download, BookOpen, Plus, Trash2, GripVertical, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { Sparkles, ArrowLeft, BookOpen, PenTool, Download, Repeat, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-
-interface Chapter {
-  id: string;
-  title: string;
-  summary: string;
-  notes: string;
-  content?: string;
-  isGenerating?: boolean;
-}
+import { BookChapter, BookOutline, BookMode, BookDepth, BookView, ImprovementType } from "@/types/book";
+import BookSetup from "@/components/book/BookSetup";
+import BookOutlineEditor from "@/components/book/BookOutlineEditor";
+import BookWritingPanel from "@/components/book/BookWritingPanel";
+import BookContentViewer from "@/components/book/BookContentViewer";
+import BookExportPanel from "@/components/book/BookExportPanel";
+import BookRepurposePanel from "@/components/book/BookRepurposePanel";
 
 const BookCreator = () => {
   const { toast } = useToast();
 
+  // Book metadata
   const [bookTitle, setBookTitle] = useState("");
   const [genre, setGenre] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
+  const [depth, setDepth] = useState<BookDepth>("standard");
+  const [mode, setMode] = useState<BookMode>("guided");
+  const [existingContent, setExistingContent] = useState("");
 
-  const [chapters, setChapters] = useState<Chapter[]>([
-    { id: crypto.randomUUID(), title: "", summary: "", notes: "" },
-  ]);
-
-  const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
+  // State
+  const [view, setView] = useState<BookView>("setup");
+  const [outline, setOutline] = useState<BookOutline | null>(null);
+  const [chapters, setChapters] = useState<BookChapter[]>([]);
   const [viewingChapter, setViewingChapter] = useState<number | null>(null);
+  const [isGeneratingOutline, setIsGeneratingOutline] = useState(false);
 
-  const addChapter = () => {
-    setChapters((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), title: "", summary: "", notes: "" },
-    ]);
-  };
+  const generatedChapters = chapters.filter((ch) => ch.content);
+  const fullContent = generatedChapters.length > 0
+    ? `# ${outline?.title || bookTitle}\n\n${outline?.subtitle ? `*${outline.subtitle}*\n\n` : ""}${outline?.frontMatter ? `---\n\n${outline.frontMatter}\n\n---\n\n` : ""}${generatedChapters.map((ch) => ch.content).join("\n\n---\n\n")}${outline?.backMatter ? `\n\n---\n\n${outline.backMatter}` : ""}`
+    : "";
 
-  const removeChapter = (id: string) => {
-    if (chapters.length <= 1) return;
-    setChapters((prev) => prev.filter((ch) => ch.id !== id));
-  };
+  // Generate outline
+  const handleGenerateOutline = async () => {
+    if (!bookTitle.trim()) return;
+    setIsGeneratingOutline(true);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-book-outline`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ bookTitle, genre, targetAudience, depth, mode, existingContent }),
+        }
+      );
 
-  const updateChapter = (id: string, field: keyof Chapter, value: string) => {
-    setChapters((prev) =>
-      prev.map((ch) => (ch.id === id ? { ...ch, [field]: value } : ch))
-    );
-  };
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Outline generation failed");
+      }
 
-  const generateChapter = async (index: number) => {
-    const ch = chapters[index];
-    if (!ch.title.trim() || !bookTitle.trim()) {
-      toast({ title: "Missing info", description: "Book title and chapter title are required.", variant: "destructive" });
-      return;
+      const data = await response.json();
+      const ol: BookOutline = data.outline;
+      setOutline(ol);
+      setBookTitle(ol.title || bookTitle);
+
+      const newChapters: BookChapter[] = ol.chapters.map((ch, i) => ({
+        id: crypto.randomUUID(),
+        title: ch.title,
+        summary: ch.summary,
+        notes: "",
+        keyPoints: ch.keyPoints || [],
+        hook: ch.hook || "",
+        status: "pending" as const,
+      }));
+      setChapters(newChapters);
+
+      if (mode === "quick") {
+        setView("writing");
+        // Auto-generate all chapters in quick mode
+        setTimeout(() => handleGenerateAll(newChapters), 100);
+      } else {
+        setView("outline");
+      }
+    } catch (error) {
+      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
+    } finally {
+      setIsGeneratingOutline(false);
     }
+  };
 
-    setChapters((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, isGenerating: true } : c))
-    );
+  // Generate single chapter
+  const handleGenerateChapter = async (index: number, chaptersRef?: BookChapter[]) => {
+    const currentChapters = chaptersRef || chapters;
+    const ch = currentChapters[index];
+    if (!ch?.title.trim()) return;
+
+    setChapters((prev) => prev.map((c, i) => (i === index ? { ...c, isGenerating: true, status: "generating" } : c)));
 
     try {
+      // Collect previous chapter summaries for anti-repetition
+      const previousChapters = currentChapters.slice(0, index).filter((c) => c.content).map((c) => c.content!.substring(0, 600));
+
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-book-chapter`,
         {
@@ -71,90 +108,118 @@ const BookCreator = () => {
             Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            bookTitle,
+            bookTitle: outline?.title || bookTitle,
             genre,
             targetAudience,
-            chapters: chapters.map((c) => ({ title: c.title, summary: c.summary, notes: c.notes })),
+            chapters: currentChapters.map((c) => ({ title: c.title, summary: c.summary, notes: c.notes, keyPoints: c.keyPoints, hook: c.hook })),
             chapterIndex: index,
+            depth,
+            previousChapters,
           }),
         }
       );
 
       if (!response.ok) {
-        const err = await response.json().catch(() => ({ error: "Generation failed" }));
+        const err = await response.json().catch(() => ({}));
         throw new Error(err.error || "Generation failed");
       }
 
       const data = await response.json();
-      setChapters((prev) =>
-        prev.map((c, i) => (i === index ? { ...c, content: data.chapter, isGenerating: false } : c))
-      );
-      setViewingChapter(index);
+      setChapters((prev) => prev.map((c, i) => (i === index ? { ...c, content: data.chapter, isGenerating: false, status: "complete" } : c)));
     } catch (error) {
-      setChapters((prev) =>
-        prev.map((c, i) => (i === index ? { ...c, isGenerating: false } : c))
+      setChapters((prev) => prev.map((c, i) => (i === index ? { ...c, isGenerating: false, status: "pending" } : c)));
+      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
+    }
+  };
+
+  // Generate all chapters sequentially
+  const handleGenerateAll = async (chaptersRef?: BookChapter[]) => {
+    const currentChapters = chaptersRef || chapters;
+    for (let i = 0; i < currentChapters.length; i++) {
+      if (!currentChapters[i].title.trim() || currentChapters[i].content) continue;
+      await handleGenerateChapter(i, currentChapters);
+    }
+  };
+
+  // Improve chapter
+  const handleImproveChapter = async (index: number, type: ImprovementType) => {
+    const ch = chapters[index];
+    if (!ch?.content) return;
+
+    setChapters((prev) => prev.map((c, i) => (i === index ? { ...c, isGenerating: true } : c)));
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/improve-book-content`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            content: ch.content,
+            improvementType: type,
+            bookContext: `Book: ${outline?.title || bookTitle}, Genre: ${genre}, Audience: ${targetAudience}`,
+          }),
+        }
       );
-      toast({
-        title: "Generation Failed",
-        description: error instanceof Error ? error.message : "Something went wrong",
-        variant: "destructive",
-      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || "Improvement failed");
+      }
+
+      const data = await response.json();
+      setChapters((prev) => prev.map((c, i) => (i === index ? { ...c, content: data.content, isGenerating: false, status: "improved" } : c)));
+      toast({ title: "Chapter Improved", description: `Applied "${type}" enhancement` });
+    } catch (error) {
+      setChapters((prev) => prev.map((c, i) => (i === index ? { ...c, isGenerating: false } : c)));
+      toast({ title: "Error", description: error instanceof Error ? error.message : "Failed", variant: "destructive" });
     }
   };
 
-  const generateAllChapters = async () => {
-    for (let i = 0; i < chapters.length; i++) {
-      if (!chapters[i].title.trim()) continue;
-      if (chapters[i].content) continue;
-      await generateChapter(i);
-    }
-  };
+  const isAnyGenerating = chapters.some((ch) => ch.isGenerating);
 
-  const handleDownloadAll = () => {
-    const generated = chapters.filter((ch) => ch.content);
-    if (generated.length === 0) return;
-    const fullBook = `# ${bookTitle}\n\n` + generated.map((ch) => ch.content).join("\n\n---\n\n");
-    const blob = new Blob([fullBook], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${bookTitle || "book"}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const generatedCount = chapters.filter((ch) => ch.content).length;
-  const hasValidChapters = chapters.some((ch) => ch.title.trim()) && bookTitle.trim();
-
-  const renderMarkdown = (md: string) =>
-    md
-      .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold font-serif mt-6 mb-2 text-gold-light">$1</h3>')
-      .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold font-serif mt-8 mb-3 text-gradient-gold pb-1 border-b border-border">$2</h2>')
-      .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold font-serif mt-8 mb-3 text-gradient-gold pb-1 border-b border-border">$1</h2>')
-      .replace(/^# (.+)$/gm, '<h1 class="text-3xl font-bold font-serif mb-2">$1</h1>')
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc text-secondary-foreground">$1</li>')
-      .replace(/\n\n/g, '<div class="mb-4"></div>')
-      .replace(/\n/g, "<br/>");
+  // Navigation tabs for post-outline views
+  const tabs: { id: BookView; label: string; icon: React.ReactNode; show: boolean }[] = [
+    { id: "outline", label: "Outline", icon: <BookOpen className="w-3.5 h-3.5" />, show: !!outline },
+    { id: "writing", label: "Write", icon: <PenTool className="w-3.5 h-3.5" />, show: !!outline },
+    { id: "preview", label: "Preview", icon: <Eye className="w-3.5 h-3.5" />, show: generatedChapters.length > 0 },
+    { id: "export", label: "Export", icon: <Download className="w-3.5 h-3.5" />, show: generatedChapters.length > 0 },
+    { id: "repurpose", label: "Repurpose", icon: <Repeat className="w-3.5 h-3.5" />, show: generatedChapters.length > 0 },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg">
         <div className="container flex items-center justify-between h-16 px-6">
           <Link to="/" className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-gold" />
+            <Sparkles className="w-5 h-5 text-primary" />
             <span className="text-lg font-bold font-serif tracking-tight">DocuForge</span>
           </Link>
+
+          {/* Tabs */}
+          {view !== "setup" && (
+            <div className="hidden md:flex items-center gap-1 bg-secondary/50 rounded-lg p-1">
+              {tabs.filter((t) => t.show).map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setView(tab.id); setViewingChapter(null); }}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                    view === tab.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab.icon} {tab.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex gap-2">
-            {viewingChapter !== null && (
-              <Button variant="ghost" onClick={() => setViewingChapter(null)} className="text-muted-foreground">
-                <ArrowLeft className="w-4 h-4 mr-2" /> Outline
-              </Button>
-            )}
-            {generatedCount > 0 && (
-              <Button variant="hero" size="sm" onClick={handleDownloadAll}>
-                <Download className="w-4 h-4 mr-1" /> Download Book
+            {view !== "setup" && (
+              <Button variant="ghost" size="sm" onClick={() => { setView("setup"); setViewingChapter(null); }}>
+                <ArrowLeft className="w-4 h-4 mr-1" /> New Book
               </Button>
             )}
           </div>
@@ -163,193 +228,76 @@ const BookCreator = () => {
 
       <div className="container max-w-4xl mx-auto px-6 pt-28 pb-16">
         <AnimatePresence mode="wait">
-          {viewingChapter !== null && chapters[viewingChapter]?.content ? (
-            <motion.div
-              key="preview"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="rounded-xl border border-border bg-card/50 backdrop-blur-sm p-8 md:p-12 shadow-premium">
-                <div
-                  className="prose prose-invert max-w-none font-sans text-foreground leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: renderMarkdown(chapters[viewingChapter].content!) }}
+          <motion.div
+            key={viewingChapter !== null ? `ch-${viewingChapter}` : view}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.25 }}
+          >
+            {/* Chapter preview */}
+            {viewingChapter !== null && chapters[viewingChapter]?.content ? (
+              <div>
+                <Button variant="ghost" size="sm" onClick={() => setViewingChapter(null)} className="mb-4">
+                  <ArrowLeft className="w-4 h-4 mr-1" /> Back
+                </Button>
+                <BookContentViewer content={chapters[viewingChapter].content!} title={chapters[viewingChapter].title} />
+              </div>
+            ) : view === "setup" ? (
+              <div>
+                <div className="mb-8">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 mb-4">
+                    <BookOpen className="w-4 h-4 text-primary" />
+                    <span className="text-sm text-primary font-medium">Book Creator</span>
+                  </div>
+                  <h1 className="text-3xl md:text-4xl font-bold font-serif mb-2">
+                    Create Your <span className="text-primary italic">Book</span>
+                  </h1>
+                  <p className="text-muted-foreground">AI-powered book production with multiple creation modes.</p>
+                </div>
+                <BookSetup
+                  bookTitle={bookTitle} setBookTitle={setBookTitle}
+                  genre={genre} setGenre={setGenre}
+                  targetAudience={targetAudience} setTargetAudience={setTargetAudience}
+                  depth={depth} setDepth={setDepth}
+                  mode={mode} setMode={setMode}
+                  existingContent={existingContent} setExistingContent={setExistingContent}
+                  onGenerateOutline={handleGenerateOutline}
+                  isGenerating={isGeneratingOutline}
                 />
               </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="outline"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {/* Header */}
-              <div className="mb-10">
-                <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/5 px-4 py-1.5 mb-4">
-                  <BookOpen className="w-4 h-4 text-gold" />
-                  <span className="text-sm text-gold-light font-medium font-sans">Book Creator</span>
-                </div>
-                <h1 className="text-3xl md:text-4xl font-bold font-serif mb-2">
-                  Write Your <span className="text-gradient-gold italic">Book</span>
-                </h1>
-                <p className="text-muted-foreground font-sans">
-                  Outline your chapters, then generate full content for each one with AI.
-                </p>
-              </div>
-
-              {/* Book details */}
-              <Card className="border-border bg-card/50 backdrop-blur-sm mb-6">
-                <CardHeader>
-                  <CardTitle className="font-serif text-xl">Book Details</CardTitle>
-                  <CardDescription className="font-sans">Define the overall vision for your book</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="font-sans">Book Title *</Label>
-                    <Input placeholder="e.g. The Art of Modern Leadership" value={bookTitle} onChange={(e) => setBookTitle(e.target.value)} maxLength={200} />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="font-sans">Genre / Category</Label>
-                      <Input placeholder="e.g. Business, Self-Help, Fiction" value={genre} onChange={(e) => setGenre(e.target.value)} maxLength={100} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="font-sans">Target Audience</Label>
-                      <Input placeholder="e.g. Entrepreneurs, Young Adults" value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)} maxLength={100} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Chapters */}
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold font-serif">Chapter Outline</h2>
-                  <span className="text-sm text-muted-foreground font-sans">{chapters.length} chapter{chapters.length !== 1 ? "s" : ""}</span>
-                </div>
-
-                {chapters.map((ch, index) => {
-                  const isExpanded = expandedChapter === ch.id;
-                  return (
-                    <motion.div
-                      key={ch.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2, delay: index * 0.05 }}
-                    >
-                      <Card className={`border-border bg-card/50 backdrop-blur-sm transition-colors ${ch.content ? "border-gold/30" : ""}`}>
-                        <CardContent className="p-4">
-                          {/* Chapter header row */}
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-sm font-bold font-sans text-secondary-foreground shrink-0">
-                              {index + 1}
-                            </div>
-                            <Input
-                              placeholder={`Chapter ${index + 1} title`}
-                              value={ch.title}
-                              onChange={(e) => updateChapter(ch.id, "title", e.target.value)}
-                              className="flex-1 border-none bg-transparent text-base font-medium focus-visible:ring-0 px-0"
-                              maxLength={200}
-                            />
-                            <div className="flex items-center gap-1 shrink-0">
-                              {ch.content && (
-                                <Button variant="ghost" size="icon" onClick={() => setViewingChapter(index)} className="text-gold h-8 w-8">
-                                  <FileText className="w-4 h-4" />
-                                </Button>
-                              )}
-                              <Button variant="ghost" size="icon" onClick={() => setExpandedChapter(isExpanded ? null : ch.id)} className="text-muted-foreground h-8 w-8">
-                                {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                              </Button>
-                              {chapters.length > 1 && (
-                                <Button variant="ghost" size="icon" onClick={() => removeChapter(ch.id)} className="text-muted-foreground hover:text-destructive h-8 w-8">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Expanded details */}
-                          <AnimatePresence>
-                            {isExpanded && (
-                              <motion.div
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: "auto", opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="overflow-hidden"
-                              >
-                                <div className="pt-4 pl-11 space-y-4">
-                                  <div className="space-y-2">
-                                    <Label className="font-sans text-muted-foreground">Chapter Summary</Label>
-                                    <Textarea
-                                      placeholder="Brief summary of what this chapter covers..."
-                                      value={ch.summary}
-                                      onChange={(e) => updateChapter(ch.id, "summary", e.target.value)}
-                                      rows={3}
-                                      maxLength={1000}
-                                      className="resize-none"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label className="font-sans text-muted-foreground">Author Notes</Label>
-                                    <Textarea
-                                      placeholder="Key points, tone guidance, specific content to include..."
-                                      value={ch.notes}
-                                      onChange={(e) => updateChapter(ch.id, "notes", e.target.value)}
-                                      rows={2}
-                                      maxLength={500}
-                                      className="resize-none"
-                                    />
-                                  </div>
-                                  <Button
-                                    variant="heroOutline"
-                                    size="sm"
-                                    onClick={() => generateChapter(index)}
-                                    disabled={ch.isGenerating || !ch.title.trim() || !bookTitle.trim()}
-                                  >
-                                    {ch.isGenerating ? (
-                                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                                    ) : ch.content ? (
-                                      <><Sparkles className="w-4 h-4 mr-2" /> Regenerate</>
-                                    ) : (
-                                      <><Sparkles className="w-4 h-4 mr-2" /> Generate Chapter</>
-                                    )}
-                                  </Button>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button variant="outline" onClick={addChapter} className="gap-2">
-                  <Plus className="w-4 h-4" /> Add Chapter
-                </Button>
-                <Button
-                  variant="hero"
-                  size="lg"
-                  className="flex-1 py-6"
-                  onClick={generateAllChapters}
-                  disabled={!hasValidChapters || chapters.some((ch) => ch.isGenerating)}
-                >
-                  {chapters.some((ch) => ch.isGenerating) ? (
-                    <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Generating...</>
-                  ) : (
-                    <><Sparkles className="w-5 h-5 mr-2" /> Generate All Chapters</>
-                  )}
-                </Button>
-              </div>
-            </motion.div>
-          )}
+            ) : view === "outline" && outline ? (
+              <BookOutlineEditor
+                outline={outline}
+                chapters={chapters}
+                setChapters={setChapters}
+                onStartWriting={() => setView("writing")}
+              />
+            ) : view === "writing" ? (
+              <BookWritingPanel
+                chapters={chapters}
+                bookTitle={outline?.title || bookTitle}
+                onGenerateChapter={(i) => handleGenerateChapter(i)}
+                onGenerateAll={() => handleGenerateAll()}
+                onImproveChapter={handleImproveChapter}
+                onViewChapter={(i) => setViewingChapter(i)}
+                isAnyGenerating={isAnyGenerating}
+              />
+            ) : view === "preview" ? (
+              <BookContentViewer content={fullContent} title={outline?.title || bookTitle} />
+            ) : view === "export" ? (
+              <BookExportPanel
+                bookTitle={outline?.title || bookTitle}
+                fullContent={fullContent}
+                chapterCount={generatedChapters.length}
+              />
+            ) : view === "repurpose" ? (
+              <BookRepurposePanel
+                bookTitle={outline?.title || bookTitle}
+                fullContent={fullContent}
+              />
+            ) : null}
+          </motion.div>
         </AnimatePresence>
       </div>
     </div>
