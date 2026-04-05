@@ -14,7 +14,154 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      books: {
+        Row: {
+          back_matter: string | null
+          categories: string[] | null
+          cover_direction: Json | null
+          created_at: string
+          depth: string | null
+          description: string | null
+          front_matter: string | null
+          genre: string | null
+          id: string
+          keywords: string[] | null
+          mode: string | null
+          status: string | null
+          subtitle: string | null
+          target_audience: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          back_matter?: string | null
+          categories?: string[] | null
+          cover_direction?: Json | null
+          created_at?: string
+          depth?: string | null
+          description?: string | null
+          front_matter?: string | null
+          genre?: string | null
+          id?: string
+          keywords?: string[] | null
+          mode?: string | null
+          status?: string | null
+          subtitle?: string | null
+          target_audience?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          back_matter?: string | null
+          categories?: string[] | null
+          cover_direction?: Json | null
+          created_at?: string
+          depth?: string | null
+          description?: string | null
+          front_matter?: string | null
+          genre?: string | null
+          id?: string
+          keywords?: string[] | null
+          mode?: string | null
+          status?: string | null
+          subtitle?: string | null
+          target_audience?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      chapters: {
+        Row: {
+          book_id: string
+          chapter_order: number
+          content: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          status: string | null
+          summary: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          chapter_order?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          chapter_order?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string | null
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      generated_assets: {
+        Row: {
+          asset_type: string
+          book_id: string
+          content: string | null
+          created_at: string
+          id: string
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          asset_type: string
+          book_id: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          asset_type?: string
+          book_id?: string
+          content?: string | null
+          created_at?: string
+          id?: string
+          title?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_assets_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
