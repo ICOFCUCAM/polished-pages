@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowLeft, BookOpen, PenTool, Download, Repeat, Eye } from "lucide-react";
+import { Sparkles, ArrowLeft, BookOpen, PenTool, Download, Repeat, Eye, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { BookChapter, BookOutline, BookMode, BookDepth, BookView, ImprovementType } from "@/types/book";
@@ -11,6 +11,7 @@ import BookWritingPanel from "@/components/book/BookWritingPanel";
 import BookContentViewer from "@/components/book/BookContentViewer";
 import BookExportPanel from "@/components/book/BookExportPanel";
 import BookRepurposePanel from "@/components/book/BookRepurposePanel";
+import BookPublishingPackage from "@/components/book/BookPublishingPackage";
 
 const BookCreator = () => {
   const { toast } = useToast();
