@@ -37,7 +37,7 @@ export interface BookChapter {
 
 export type BookMode = "quick" | "guided" | "restructure" | "improve" | "publish";
 export type BookDepth = "short" | "standard" | "detailed";
-export type BookView = "setup" | "outline" | "writing" | "preview" | "export" | "repurpose";
+export type BookView = "setup" | "outline" | "writing" | "preview" | "export" | "repurpose" | "publish";
 
 export type AssetType = "blog_post" | "social_post" | "email_newsletter" | "course_outline" | "video_script" | "sales_page";
 
