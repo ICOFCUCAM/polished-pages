@@ -297,6 +297,8 @@ const BookCreator = () => {
                 bookTitle={outline?.title || bookTitle}
                 fullContent={fullContent}
               />
+            ) : (view as string) === "publish" && outline ? (
+              <BookPublishingPackage outline={outline} />
             ) : null}
           </motion.div>
         </AnimatePresence>
