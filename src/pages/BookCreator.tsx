@@ -189,7 +189,7 @@ const BookCreator = () => {
     { id: "preview", label: "Preview", icon: <Eye className="w-3.5 h-3.5" />, show: generatedChapters.length > 0 },
     { id: "export", label: "Export", icon: <Download className="w-3.5 h-3.5" />, show: generatedChapters.length > 0 },
     { id: "repurpose", label: "Repurpose", icon: <Repeat className="w-3.5 h-3.5" />, show: generatedChapters.length > 0 },
-    { id: "publish" as BookView, label: "Publish", icon: <Package className="w-3.5 h-3.5" />, show: !!outline },
+    { id: "publish", label: "Publish", icon: <Package className="w-3.5 h-3.5" />, show: !!outline },
   ];
 
   return (
