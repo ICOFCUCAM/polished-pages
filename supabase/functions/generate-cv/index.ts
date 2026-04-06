@@ -68,17 +68,79 @@ Leave empty strings for missing fields. Return ONLY JSON, no markdown.` },
     const { personalInfo, experiences, education, skills, certifications, languages, references, targetJob, template } = body;
 
     const templateInstructions: Record<string, string> = {
+      // Classic
       professional: "Use a classic professional format with clear section headings, traditional layout. Sections separated by horizontal rules. Focus on clarity and ATS optimization.",
+      traditional: "Use a conservative, time-tested chronological format. Formal tone, serif-friendly styling, no flashy elements. Prioritize readability and tradition.",
+      chronological: "Strictly reverse-chronological work history. Each role gets prominent dates. Timeline emphasis with clear career progression.",
+      functional: "Skills-based format. Group experience by skill categories rather than timeline. Ideal for career changers. Lead with a strong skills matrix.",
+      combination: "Hybrid format: lead with a skills summary section, then chronological work history. Balance competencies with timeline.",
+      "classic-elegant": "Refined format with subtle horizontal rules between sections. Serif typography feel. Understated sophistication with traditional structure.",
+      // Modern
       modern: "Use a modern format with a skills highlights section near the top, compact layout with visual emphasis on key achievements. Use bold strategically.",
-      executive: "Use an executive format emphasizing leadership, strategic vision, and high-level impact. Include an Executive Profile section instead of summary. Focus on board-level language.",
-      minimal: "Use a minimal, clean format with maximum whitespace. No decorative elements. Simple section headings. Let the content speak for itself.",
+      metro: "Grid-inspired clean layout. Bold uppercase section headers. Compact spacing with clear visual hierarchy. Metro/urban design aesthetic.",
+      sleek: "Smooth, polished presentation. Generous padding between sections. Refined spacing. Professional yet contemporary feel.",
+      startup: "Dynamic, energetic layout. Highlight impact metrics prominently. Casual-professional tone. Emphasize growth, speed, and innovation.",
+      "digital-first": "Optimized for screen reading. Include hyperlinked profiles. Modern sans-serif feel. Social media and digital presence prominent.",
+      "tech-modern": "Code-inspired aesthetics. Use monospace for technical skills. Include GitHub/tech profiles. Structured like clean documentation.",
+      "flat-design": "Bold section colors, no shadows or gradients in description. Clean geometric elements. Strong visual hierarchy with minimal decoration.",
+      // Creative
       creative: "Use a creative format with personality. Include a tagline under the name, use engaging language, and organize skills in grouped categories. Show passion and uniqueness.",
+      portfolio: "Project-showcase format. Each major project gets its own mini-section with outcomes. Ideal for designers, developers, and creatives.",
+      artistic: "Bold, unconventional layout. Asymmetric sections. Expressive language. Show creative thinking through format itself.",
+      storyteller: "Narrative-driven format. Write career as a compelling story. First-person professional narrative with clear arc.",
+      infographic: "Data-visual style. Represent skills as rated lists. Use percentage indicators in text. Timeline visualization for career.",
+      magazine: "Editorial layout inspiration. Pull-quote style highlights. Column-feel structure. Feature-article tone for summary.",
+      "brand-identity": "Personal branding focus. Lead with brand statement/tagline. Consistent personal brand voice throughout. Mission-driven.",
+      // Industry
+      engineering: "Technical engineering format. Prominent certifications and technical specs. Project-based achievements. Standards and compliance focus.",
+      healthcare: "Clinical CV format. Licensure and credentials prominent. CME/CEU tracking. Patient outcome metrics. HIPAA-aware language.",
+      legal: "Formal legal CV. Bar admissions, case highlights, practice areas. Conservative formatting. Jurisdictional experience clear.",
+      finance: "Numbers-first format. Quantified achievements mandatory. P&L, AUM, ROI metrics prominent. Regulatory awareness shown.",
+      "education-sector": "Teaching-focused format. Include coursework taught, curriculum development, student outcomes. Publication list included.",
+      marketing: "Campaign and metrics focused. ROI and conversion data. Brand portfolio. Digital and traditional marketing split.",
+      hospitality: "Service excellence format. Guest satisfaction metrics. Multi-property experience. Cultural awareness and languages prominent.",
+      government: "Public sector compliant. GS-level or equivalent. Security clearance section. Compliance and policy focus. Formal language.",
+      // Academic
+      "academic-cv": "Full academic curriculum vitae. Publications, grants, conferences, teaching, service. Comprehensive multi-page format.",
+      research: "Research-intensive format. Lab experience, methodologies, publications, grants, conference presentations. Impact factors noted.",
+      "phd-candidate": "Dissertation-focused. Research questions, methodology, preliminary findings. Committee members. Teaching assistantship.",
+      postdoc: "Post-PhD format. Research output, fellowships, lab management, mentoring. Grant writing experience. Collaboration network.",
+      professor: "Senior academic format. Teaching philosophy statement. Tenure track evidence. Doctoral supervision. Editorial board memberships.",
+      // Executive
+      executive: "Use an executive format emphasizing leadership, strategic vision, and high-level impact. Include an Executive Profile section instead of summary. Focus on board-level language.",
+      "c-suite": "Chief officer level. P&L responsibility, organizational transformation, board reporting. Strategic vision and company-wide impact.",
+      "board-director": "Board governance format. Fiduciary experience, committee chairs, industry expertise. Stakeholder management.",
+      "senior-manager": "Mid-to-senior management. Team size, budget authority, cross-functional leadership. Operational excellence focus.",
+      consultant: "Engagement-based format. Client types, project scope, methodologies used, measurable client outcomes. Industry versatility.",
+      entrepreneur: "Founder format. Ventures launched, funding raised, team built, pivots navigated. Growth metrics and exit/outcome data.",
+      // Minimalist
+      minimal: "Use a minimal, clean format with maximum whitespace. No decorative elements. Simple section headings. Let the content speak for itself.",
+      zen: "Ultra-calm layout. Generous margins. Soft hierarchy. Breathing room between sections. Peaceful yet professional.",
+      "one-page": "Strictly one page. Every word earns its place. Condensed but not cramped. Prioritized content only.",
+      swiss: "International/Swiss typographic style. Grid-precise alignment. Functional typography. No ornamentation.",
+      "clean-slate": "Absolute minimum styling. No borders, no rules, no icons. Pure text hierarchy through size and weight only.",
+      // Regional
+      europass: "EU Europass standard format. Structured sections matching Europass template. Language levels using CEFR scale.",
+      "uk-standard": "British CV conventions. Personal statement, no photo, no date of birth. 'CV' not 'Resume'. UK spelling throughout.",
+      nordic: "Scandinavian design principles. Clean, functional, egalitarian tone. Skills-focused. Personal number placeholder.",
+      australian: "Australian format. Key selection criteria responses. Referees section. State/territory context. Achievements-focused.",
+      canadian: "Canadian format. Bilingual awareness. Provincial context. Volunteer section included. Competency-based.",
+      // Specialty
+      "career-change": "Transferable skills prominent. Bridge language connecting old and new industries. Skills reframing. Strong summary.",
+      freelancer: "Project-based format. Client roster (anonymized). Rates/billing not included. Deliverables and outcomes for each project.",
+      "military-transition": "Military-to-civilian translation. Rank translated to equivalent. Leadership quantified. Security clearance. Duty stations.",
+      internship: "Entry-level format. Education first. Projects, coursework, extracurriculars. Potential over experience. Eager professional tone.",
+      "remote-worker": "Remote-first format. Async tools proficiency. Self-management evidence. Time-zone flexibility. Digital collaboration skills.",
+      "volunteer-focused": "Community impact format. Volunteer roles treated as professional experience. Hours contributed. Social impact metrics.",
     };
+
+    const selectedTemplate = template || "professional";
+    const templateInstruction = templateInstructions[selectedTemplate] || templateInstructions["professional"];
 
     const systemPrompt = `You are an elite professional CV writer. Generate a polished, ATS-optimized CV in clean markdown format.
 
-TEMPLATE STYLE: ${template || "professional"}
-${templateInstructions[template || "professional"]}
+TEMPLATE STYLE: ${selectedTemplate}
+${templateInstruction}
 
 RULES:
 - Use strong action verbs and quantified achievements
