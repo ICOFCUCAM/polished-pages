@@ -128,7 +128,7 @@ const CVGenerator = () => {
   };
 
   if (generatedCV) {
-    return <CVPreview markdown={generatedCV} onBack={() => setGeneratedCV(null)} />;
+    return <CVPreview markdown={generatedCV} template={template} onBack={() => setGeneratedCV(null)} />;
   }
 
   return (
