@@ -35,7 +35,7 @@ function execBriefing(tenantId, title = "Regional Stability Brief") {
         { id: "s-rec", role: "recommendation", heading: "Recommendation", level: 1, blocks: [{ id: "b4", type: "callout", style: "recommendation", text: "Proceed." }] }
       ]
     },
-    outputs: ["pdf", "docx"],
+    outputs: ["md"],   // Sprint 2: md renderer is live end-to-end (pdf/docx = Epics 6/7)
     delivery: { mode: "async", storage: "signed_url", ttlSeconds: 604800 }
   };
 }
@@ -110,6 +110,11 @@ async function main() {
 
   // 10. render.succeeded audit present
   ok((await countAudit(TENANT_A, "render.succeeded", jobId)) === 1, "audit: render.succeeded written");
+
+  // 10b. Sprint 2: a real md artifact was produced + stored with a checksum.
+  const art = await adminPool.query("select format, sha256, size_bytes from dispatch.artifacts where job_id=$1", [jobId]);
+  ok(art.rows.length === 1 && art.rows[0].format === "md" && /^[a-f0-9]{64}$/.test(art.rows[0].sha256) && art.rows[0].size_bytes > 0,
+     `md artifact stored (sha256, ${art.rows[0]?.size_bytes ?? 0} bytes)`);
 
   // 11. version persisted + immutable. RLS has no UPDATE policy (silently 0 rows)
   // AND the immutability trigger blocks privileged mutation. Verify the row is

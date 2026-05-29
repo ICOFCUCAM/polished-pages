@@ -7,6 +7,7 @@
   "exports": {
     "./validator": "./src/validator.mjs",
     "./engine": "./src/engine.mjs",
+    "./render-md": "./src/render-md.mjs",
     "./schemas/ddm": "./schemas/ddm.v1.0.json",
     "./schemas/scaffolds": "./schemas/scaffolds.v1.0.json"
   },
