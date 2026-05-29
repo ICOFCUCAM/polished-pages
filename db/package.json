@@ -1,0 +1,12 @@
+{
+  "name": "@dispatch/db",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Sovereign Dispatch schema: forward-only migrations + runner (Dispatch-owned).",
+  "scripts": {
+    "migrate": "node migrate.mjs up",
+    "migrate:status": "node migrate.mjs status",
+    "migrate:seed": "node migrate.mjs up --seed"
+  }
+}

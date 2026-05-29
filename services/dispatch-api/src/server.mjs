@@ -5,7 +5,7 @@
 import http from "node:http";
 import { validateRequest } from "@dispatch/ddm-schema/validator";
 import { makePool, withClaims, writeAudit } from "../../shared/src/db.mjs";
-import { resolvePrincipal, hasScope } from "../../shared/src/auth.mjs";
+import { resolvePrincipal, hasScope, mintServiceToken } from "../../shared/src/auth.mjs";
 
 const ENGINE_VERSION = "dispatch-api@1.0.0-sprint1";
 const pool = makePool();
@@ -116,6 +116,18 @@ const server = http.createServer(async (req, res) => {
   try {
     if (req.method === "GET" && req.url === "/v1/health") return send(res, 200, { ok: true, engineVersion: ENGINE_VERSION });
     if (req.method !== "POST") return send(res, 404, errEnvelope(null, 404, "NOT_FOUND", "not found"));
+
+    // Client-credentials: exchange svc client_id/secret for a short-lived JWT (R2).
+    if (req.url === "/v1/token") {
+      let cbody;
+      try { cbody = JSON.parse(await readBody(req)); }
+      catch { return send(res, 400, errEnvelope(null, 400, "SCHEMA_INVALID", "invalid JSON body")); }
+      const ex = await resolvePrincipal(pool, `svc ${cbody.client_id || ""}:${cbody.secret || ""}`, withAdmin);
+      if (ex.error) return send(res, ex.error.status, errEnvelope(null, ex.error.status, ex.error.code, ex.error.message));
+      const minted = mintServiceToken(ex.principal);
+      if (minted.error) return send(res, minted.error.status, errEnvelope(null, minted.error.status, minted.error.code, minted.error.message));
+      return send(res, 200, { ...minted, tenantId: ex.principal.tenantId, scopes: ex.principal.scopes });
+    }
 
     const auth = await resolvePrincipal(pool, req.headers["authorization"], withAdmin);
     if (auth.error) return send(res, auth.error.status, errEnvelope(null, auth.error.status, auth.error.code, auth.error.message));

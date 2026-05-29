@@ -1,0 +1,10 @@
+{
+  "$comment": "Canonical forward-only apply order for Sovereign Dispatch migrations. RLS policies (M2) MUST apply AFTER the tables they protect (M3/M4); therefore this is an explicit order, not a lexical sort. The migration runner (migrate.mjs) reads this file.",
+  "order": [
+    "M1__identity_core.sql",
+    "M3__documents.sql",
+    "M4__jobs_artifacts_audit.sql",
+    "M2__rls_policies.sql",
+    "M5__roles_grants.sql"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@dispatch/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared DB access, Principal/auth resolver, and HS256 JWT for Dispatch services.",
+  "main": "src/db.mjs",
+  "dependencies": {
+    "pg": "^8.13.1"
+  }
+}

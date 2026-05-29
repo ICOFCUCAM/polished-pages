@@ -1,0 +1,20 @@
+# Keep Dispatch images small and free of Polished Pages SPA build inputs.
+**/node_modules
+**/dist
+**/.git
+**/*.log
+# Polished Pages SPA (not part of any Dispatch image)
+src
+public
+supabase
+index.html
+vite.config.ts
+vitest.config.ts
+tailwind.config.ts
+postcss.config.js
+eslint.config.js
+components.json
+playwright*.ts
+bun.lock
+bun.lockb
+.lovable

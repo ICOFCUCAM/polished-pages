@@ -1,0 +1,86 @@
+# Sovereign Dispatch — dedicated, self-contained infrastructure (R3 + R4).
+#
+# Brings up Dispatch on its OWN Postgres (not the Polished Pages Supabase
+# project), applies migrations with the Dispatch-owned runner, then starts the
+# API and worker. This entire stack has zero dependency on the Polished Pages
+# SPA or its Supabase project — it is what proves Dispatch can outlive an
+# archived Polished Pages.
+#
+#   docker compose up --build
+#   curl localhost:8787/v1/health
+#
+# NOTE: secrets below are dev defaults — override for any real deployment.
+
+services:
+  dispatch-db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: dispatch
+    command: ["postgres", "-c", "shared_preload_libraries="]
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dispatch"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - dispatch-pgdata:/var/lib/postgresql/data
+
+  dispatch-migrate:
+    build:
+      context: .
+      dockerfile: db/Dockerfile
+    environment:
+      DISPATCH_MIGRATE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@dispatch-db:5432/dispatch
+      DISPATCH_APP_PASSWORD: ${DISPATCH_APP_PASSWORD:-dispatch_app}
+    depends_on:
+      dispatch-db:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        psql "$$DISPATCH_MIGRATE_URL" -c "create extension if not exists pgcrypto" &&
+        node db/migrate.mjs up &&
+        psql "$$DISPATCH_MIGRATE_URL" -c "alter role dispatch_app with login password '$$DISPATCH_APP_PASSWORD'"
+
+  dispatch-api:
+    build:
+      context: .
+      dockerfile: services/dispatch-api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PGHOST: dispatch-db
+      PGPORT: "5432"
+      PGDATABASE: dispatch
+      DISPATCH_DB_USER: dispatch_app
+      PGPASSWORD: ${DISPATCH_APP_PASSWORD:-dispatch_app}
+      DISPATCH_TOKEN_SECRET: ${DISPATCH_TOKEN_SECRET:-dev-dispatch-token-secret-change-me}
+      DISPATCH_TOKEN_ISSUER: sovereign-dispatch
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
+      PORT: "8787"
+    ports:
+      - "8787:8787"
+    depends_on:
+      dispatch-migrate:
+        condition: service_completed_successfully
+
+  dispatch-worker:
+    build:
+      context: .
+      dockerfile: services/dispatch-worker/Dockerfile
+    environment:
+      NODE_ENV: production
+      PGHOST: dispatch-db
+      PGPORT: "5432"
+      PGDATABASE: dispatch
+      DISPATCH_DB_USER: dispatch_app
+      PGPASSWORD: ${DISPATCH_APP_PASSWORD:-dispatch_app}
+    depends_on:
+      dispatch-migrate:
+        condition: service_completed_successfully
+
+volumes:
+  dispatch-pgdata:

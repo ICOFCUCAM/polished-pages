@@ -1,0 +1,90 @@
+# Sovereign Dispatch — independent CI (R5).
+#
+# Owned by and scoped to Dispatch only (services/**, packages/**, db/**). It does
+# NOT build the Polished Pages SPA, and the SPA's pipeline does not build this.
+# Archiving Polished Pages does not affect this workflow.
+name: dispatch-ci
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "services/**"
+      - "packages/**"
+      - "db/**"
+      - ".github/workflows/dispatch-ci.yml"
+  pull_request:
+    paths:
+      - "services/**"
+      - "packages/**"
+      - "db/**"
+      - ".github/workflows/dispatch-ci.yml"
+
+jobs:
+  backbone:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: dispatch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d dispatch"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGDATABASE: dispatch
+      DISPATCH_DB_USER: dispatch_app
+      PGPASSWORD: dispatch_app
+      DISPATCH_MIGRATE_URL: postgres://postgres:postgres@localhost:5432/dispatch
+      DISPATCH_TOKEN_SECRET: ci-dispatch-token-secret
+      DISPATCH_TOKEN_ISSUER: sovereign-dispatch
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Install package deps (ddm-schema)
+        working-directory: packages/ddm-schema
+        run: npm ci
+
+      - name: Install service deps
+        working-directory: services
+        run: npm install --no-audit --no-fund
+
+      - name: Apply migrations (Dispatch-owned runner)
+        run: |
+          psql "$DISPATCH_MIGRATE_URL" -c "create extension if not exists pgcrypto"
+          node db/migrate.mjs up --seed
+          psql "$DISPATCH_MIGRATE_URL" -c "alter role dispatch_app with login password 'dispatch_app'"
+
+      - name: Migration status (must be 0 pending)
+        run: node db/migrate.mjs status
+
+      - name: DDM schema fixture gate (25/25)
+        working-directory: packages/ddm-schema
+        run: node test/run.mjs
+
+      - name: Start API
+        working-directory: services
+        run: |
+          node dispatch-api/src/server.mjs &
+          for i in $(seq 1 30); do curl -sf localhost:8787/v1/health && break; sleep 1; done
+
+      - name: E2E backbone (13)
+        working-directory: services
+        run: node test/sprint1-e2e.mjs
+
+      - name: Retry / DLQ (3)
+        working-directory: services
+        run: node test/sprint1-retry.mjs

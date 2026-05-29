@@ -1,0 +1,14 @@
+{
+  "name": "@dispatch/dispatch-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sovereign Dispatch worker: SKIP LOCKED claim, status progression, retry/DLQ, signed callbacks.",
+  "main": "src/worker.mjs",
+  "scripts": {
+    "start": "node src/worker.mjs"
+  },
+  "dependencies": {
+    "@dispatch/shared": "*"
+  }
+}
