@@ -1,5 +1,5 @@
 {
-  "name": "@sovereign-dispatch/ddm-schema",
+  "name": "@dispatch/ddm-schema",
   "version": "1.0.0",
   "private": true,
   "type": "module",

@@ -1,5 +1,5 @@
 {
-  "name": "@sovereign-dispatch/contract",
+  "name": "@dispatch/contract",
   "version": "1.0.0",
   "private": true,
   "type": "module",

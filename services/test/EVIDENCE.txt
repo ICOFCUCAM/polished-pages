@@ -1,0 +1,30 @@
+Sprint 1 Backbone — Test Evidence
+Generated: 2026-05-29T11:49:45Z
+Postgres: 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)  | API: dispatch_app role (RLS forced)
+
+### E2E backbone (Contract->Validation->DB->Job->Worker->Status->Audit)
+== Sprint 1 E2E backbone ==
+  PASS validate valid exec-briefing -> 200 valid=true (warnings=0)
+  PASS validate missing recommendation -> valid=false SCAFFOLD_INCOMPLETE
+  PASS submit -> 202 jobId=84e134b4 status=queued
+  PASS audit: document.submitted written
+  PASS idempotent replay -> same jobId, replay=true
+  PASS missing Idempotency-Key -> 400
+  PASS tenant mismatch -> 403 TENANT_MISMATCH
+  PASS bad service secret -> 401 INVALID_CLIENT
+  PASS worker claimed a job (SKIP LOCKED)
+  PASS status progression queued -> succeeded (progress 100)
+  PASS audit: render.succeeded written
+  PASS document_versions immutable (trigger blocks UPDATE even for superuser inspector)
+  PASS cross-tenant isolation: tenant B cannot see tenant A job
+
+TOTAL: 13 passed, 0 failed
+
+### Retry / DLQ framework
+== Sprint 1 retry/DLQ framework ==
+   transitions: queued/att1 -> queued/att2 -> failed/att3 -> failed/att3
+  PASS job ends failed after exhausting retries (attempts=3)
+  PASS job moved to job_dlq with replay payload
+  PASS audit: render.failed written
+
+TOTAL: 3 passed, 0 failed
