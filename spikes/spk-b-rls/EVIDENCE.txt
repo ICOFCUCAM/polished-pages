@@ -1,0 +1,35 @@
+SPK-B Evidence — Tenant Isolation / RLS
+Generated: 2026-05-29T11:26:22Z
+Postgres: 16.13 (Ubuntu 16.13-0ubuntu0.24.04.1)
+Role under test: dispatch_app (nosuperuser, RLS forced)
+Claim source: request.jwt.claims GUC (emulates Supabase access-token hook)
+
+Pager usage is off.
+CREATE FUNCTION
+DROP TABLE
+CREATE TABLE
+GRANT
+GRANT
+SET
+DO
+DO
+        name         |    expected    | actual  | result 
+---------------------+----------------+---------+--------
+ audit_insert        | allowed        | allowed | PASS
+ audit_update_denied | denied(0 rows) | 0 rows  | PASS
+ author_write_cross  | denied         | denied  | PASS
+ author_write_own    | allowed        | allowed | PASS
+ doc_delete_denied   | denied(0 rows) | 0 rows  | PASS
+ no_claim_reads_all  | denied(0)      | 0       | PASS
+ service_A_reads_A   | visible(>=1)   | 1       | PASS
+ service_A_reads_B   | denied(0)      | 0       | PASS
+ user_A_reads_A      | visible(>=1)   | 1       | PASS
+ user_A_reads_B      | denied(0)      | 0       | PASS
+ viewer_write        | denied         | denied  | PASS
+(11 rows)
+
+ passed | failed 
+--------+--------
+     11 |      0
+(1 row)
+

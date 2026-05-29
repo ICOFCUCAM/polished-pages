@@ -1,0 +1,3 @@
+spk-a-chromium/out-*.pdf
+spk-a-chromium/page*.png
+**/node_modules/

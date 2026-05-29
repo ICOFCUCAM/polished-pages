@@ -1,0 +1,11 @@
+{
+  "name": "@sovereign-dispatch/contract",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Frozen Dispatch Contract v1 — DocumentRequest / DocumentResult JSON Schemas.",
+  "exports": {
+    "./schemas/request": "./schemas/document-request.v1.0.json",
+    "./schemas/result": "./schemas/document-result.v1.0.json"
+  }
+}

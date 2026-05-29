@@ -1,0 +1,45 @@
+{
+  "$comment": "DocType scaffold profiles (Epic 1 section 4). Validated as overlays on DDM by the shared post-validation pass. Not JSON-Schema constraints; consumed as data.",
+  "version": "1.0",
+  "profiles": {
+    "executive_briefing": {
+      "docType": "executive_briefing",
+      "template": "exec-brief",
+      "version": 1,
+      "requiredRoles": ["executive_summary", "key_judgements", "analysis", "recommendation"],
+      "optionalRoles": ["situation", "options", "appendices", "citations"],
+      "roleOrder": ["title_block", "executive_summary", "key_judgements", "situation",
+                    "analysis", "options", "recommendation", "appendices", "citations"],
+      "blockPolicy": { "recommendation": { "require": ["callout"] } },
+      "citationStyle": "endnote",
+      "tocDepth": 2,
+      "numbered": true
+    },
+    "situation_report": {
+      "docType": "situation_report",
+      "template": "sitrep",
+      "version": 1,
+      "requiredRoles": ["current_status", "timeline", "impacts", "next_update"],
+      "optionalRoles": ["background", "actions", "appendices", "citations"],
+      "roleOrder": ["title_block", "current_status", "background", "timeline",
+                    "impacts", "actions", "next_update", "appendices", "citations"],
+      "blockPolicy": { "timeline": { "require": ["timeline"] } },
+      "citationStyle": "numeric",
+      "tocDepth": 2,
+      "numbered": true
+    },
+    "policy_paper": {
+      "docType": "policy_paper",
+      "template": "policy-paper",
+      "version": 1,
+      "requiredRoles": ["summary", "problem", "evidence", "options_analysis", "recommendation"],
+      "optionalRoles": ["background", "implementation", "risks", "appendices", "references"],
+      "roleOrder": ["title_block", "summary", "problem", "background", "evidence",
+                    "options_analysis", "implementation", "risks", "recommendation", "appendices", "references"],
+      "blockPolicy": { "options_analysis": { "recommend": ["table"] } },
+      "citationStyle": "footnote",
+      "tocDepth": 3,
+      "numbered": true
+    }
+  }
+}

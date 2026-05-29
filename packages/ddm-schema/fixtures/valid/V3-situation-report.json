@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "1.0",
+  "idempotencyKey": "00000000-0000-4000-8000-000000000001",
+  "source": {
+    "system": "saas-ui",
+    "tenantId": "11111111-1111-4111-8111-111111111111"
+  },
+  "document": {
+    "ddmVersion": "1.0",
+    "docType": "situation_report",
+    "metadata": {
+      "title": "Regional Stability Brief",
+      "date": "2026-05-29",
+      "status": "final"
+    },
+    "classification": {
+      "scheme": "none",
+      "level": "UNCLASSIFIED"
+    },
+    "sections": [
+      {
+        "id": "s-cs",
+        "role": "current_status",
+        "heading": "Current Status",
+        "level": 1,
+        "blocks": [
+          {
+            "id": "b1",
+            "type": "kpi",
+            "items": [
+              {
+                "label": "Sites affected",
+                "value": "12"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s-tl",
+        "role": "timeline",
+        "heading": "Timeline",
+        "level": 1,
+        "blocks": [
+          {
+            "id": "b2",
+            "type": "timeline",
+            "events": [
+              {
+                "ts": "0800",
+                "label": "Onset"
+              },
+              {
+                "ts": "1200",
+                "label": "Escalation"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "s-im",
+        "role": "impacts",
+        "heading": "Impacts",
+        "level": 1,
+        "blocks": [
+          {
+            "id": "b3",
+            "type": "paragraph",
+            "text": "Impact assessment."
+          }
+        ]
+      },
+      {
+        "id": "s-nu",
+        "role": "next_update",
+        "heading": "Next Update",
+        "level": 1,
+        "blocks": [
+          {
+            "id": "b4",
+            "type": "paragraph",
+            "text": "1800Z."
+          }
+        ]
+      }
+    ]
+  },
+  "outputs": [
+    "pdf"
+  ],
+  "delivery": {
+    "mode": "async",
+    "storage": "signed_url",
+    "ttlSeconds": 604800
+  },
+  "compliance": {
+    "pdfProfile": "pdf_a_2b",
+    "accessibility": "none"
+  }
+}

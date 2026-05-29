@@ -1,0 +1,96 @@
+{
+  "_expect": "SCHEMA_INVALID",
+  "request": {
+    "schemaVersion": "1.0",
+    "idempotencyKey": "00000000-0000-4000-8000-000000000001",
+    "source": {
+      "system": "saas-ui",
+      "tenantId": "11111111-1111-4111-8111-111111111111"
+    },
+    "document": {
+      "ddmVersion": "1.0",
+      "docType": "executive_briefing",
+      "metadata": {
+        "title": "Regional Stability Brief",
+        "date": "2026-05-29",
+        "status": "final"
+      },
+      "classification": {
+        "scheme": "none",
+        "level": "UNCLASSIFIED"
+      },
+      "sections": [
+        {
+          "id": "s-sum",
+          "role": "executive_summary",
+          "heading": "Executive Summary",
+          "level": 1,
+          "blocks": [
+            {
+              "id": "b1",
+              "type": "paragraph",
+              "text": "BLUF: situation stable.",
+              "style": "lead"
+            }
+          ]
+        },
+        {
+          "id": "s-kj",
+          "role": "key_judgements",
+          "heading": "Key Judgements",
+          "level": 1,
+          "blocks": [
+            {
+              "id": "b2",
+              "type": "bullets",
+              "ordered": true,
+              "items": [
+                {
+                  "text": "Judgement one."
+                },
+                {
+                  "text": "Judgement two."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "s-an",
+          "role": "analysis",
+          "heading": "Analysis",
+          "level": 1,
+          "blocks": [
+            {
+              "id": "b3",
+              "type": "paragraph",
+              "text": "Analysis body."
+            }
+          ]
+        },
+        {
+          "id": "s-rec",
+          "role": "recommendation",
+          "heading": "Recommendation",
+          "level": 1,
+          "blocks": [
+            {
+              "id": "b4",
+              "type": "callout",
+              "style": "recommendation",
+              "text": "Proceed with option A."
+            }
+          ]
+        }
+      ]
+    },
+    "outputs": [
+      "pptx"
+    ],
+    "delivery": {
+      "mode": "async",
+      "storage": "signed_url",
+      "ttlSeconds": 604800
+    }
+  }
+}

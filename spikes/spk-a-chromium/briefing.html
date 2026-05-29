@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8" />
+<title>Regional Stability Brief</title>
+<style>
+  /* SPK-A print CSS — proves @page furniture: banners, running header, page numbers. */
+  @page {
+    size: A4;
+    margin: 26mm 20mm 22mm 20mm;
+    @top-center    { content: "OFFICIAL-SENSITIVE"; font: 9px Helvetica, Arial, sans-serif; color: #7a0000; letter-spacing: .08em; }
+    @bottom-center { content: "OFFICIAL-SENSITIVE — Page " counter(page) " of " counter(pages); font: 9px Helvetica, Arial, sans-serif; color: #7a0000; }
+    @top-right     { content: "Ref: INT-2026-0142"; font: 8px Helvetica, Arial, sans-serif; color: #555; }
+  }
+  @page :first { @top-center { content: ""; } @top-right { content: ""; } }
+  * { box-sizing: border-box; }
+  body { font: 11pt/1.5 Georgia, "Times New Roman", serif; color: #111; margin: 0; }
+  h1,h2,h3 { font-family: Helvetica, Arial, sans-serif; color: #0b1f3a; }
+  .cover { height: 240mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+  .cover .stamp { color: #7a0000; font: 700 12px Helvetica, Arial, sans-serif; letter-spacing: .1em; }
+  .cover h1 { font-size: 30pt; margin: 8mm 0 2mm; }
+  .cover .sub { font-style: italic; color: #444; font-size: 14pt; }
+  .cover .meta { margin-top: 14mm; font: 10pt Helvetica, Arial, sans-serif; color: #333; }
+  nav.toc { page-break-after: always; }
+  nav.toc h2 { font-size: 16pt; border-bottom: 1px solid #ccc; padding-bottom: 2mm; }
+  nav.toc ol { list-style: none; padding: 0; }
+  nav.toc li { margin: 2mm 0; font-family: Helvetica, Arial, sans-serif; font-size: 10.5pt; }
+  section.body { page-break-before: auto; }
+  h2.sec { font-size: 15pt; margin-top: 8mm; }
+  .secnum { color: #6a7a90; margin-right: 6px; }
+  p.lead { font-size: 12pt; color: #1a1a1a; }
+  table { width: 100%; border-collapse: collapse; margin: 4mm 0; font-family: Helvetica, Arial, sans-serif; font-size: 10pt; }
+  th, td { border: 1px solid #bbb; padding: 4px 8px; text-align: left; }
+  thead th { background: #0b1f3a; color: #fff; }
+  .callout { border-left: 4px solid #0b6; background: #f2fbf6; padding: 4mm; margin: 4mm 0; }
+  .callout.rec { border-color: #0b6; }
+  figure { margin: 4mm 0; } figcaption { font: italic 9pt Helvetica, Arial, sans-serif; color: #555; }
+</style>
+</head>
+<body>
+  <div class="cover">
+    <div class="stamp">OFFICIAL-SENSITIVE</div>
+    <h1>Regional Stability Brief</h1>
+    <div class="sub">Executive Briefing — Q2 Assessment</div>
+    <div class="meta">
+      Owning body: Office of Strategic Assessment<br/>
+      Date: 29 May 2026 &nbsp;·&nbsp; Reference: INT-2026-0142 &nbsp;·&nbsp; Version 1.0 (final)<br/>
+      Distribution: Cabinet Office; Strategic Planning Cell
+    </div>
+  </div>
+
+  <nav class="toc">
+    <h2>Table of Contents</h2>
+    <ol>
+      <li>1 &nbsp; Executive Summary</li>
+      <li>2 &nbsp; Key Judgements</li>
+      <li>3 &nbsp; Analysis</li>
+      <li>4 &nbsp; Recommendation</li>
+      <li>Appendix A &nbsp; Methodology</li>
+    </ol>
+  </nav>
+
+  <section class="body">
+    <h2 class="sec"><span class="secnum">1</span>Executive Summary</h2>
+    <p class="lead">BLUF: The regional situation remains broadly stable, with localised escalation risk concentrated in the eastern corridor through Q3.</p>
+
+    <h2 class="sec"><span class="secnum">2</span>Key Judgements</h2>
+    <ol>
+      <li>Stability is sustained by continued multilateral engagement (high confidence).</li>
+      <li>Eastern-corridor escalation is plausible but containable (moderate confidence).</li>
+    </ol>
+
+    <h2 class="sec"><span class="secnum">3</span>Analysis</h2>
+    <p>Indicators across the assessment period point to a managed equilibrium. The comparative option assessment is summarised below.</p>
+    <figure>
+      <table>
+        <thead><tr><th>Option</th><th>Cost</th><th>Risk</th></tr></thead>
+        <tbody>
+          <tr><td>A — Sustained engagement</td><td>Low</td><td>Low</td></tr>
+          <tr><td>B — Conditional drawdown</td><td>Medium</td><td>High</td></tr>
+        </tbody>
+      </table>
+      <figcaption>Table 1 — Option comparison</figcaption>
+    </figure>
+
+    <h2 class="sec"><span class="secnum">4</span>Recommendation</h2>
+    <div class="callout rec"><strong>Recommendation:</strong> Proceed with Option A — sustained engagement — and review at the Q3 boundary.</div>
+
+    <h2 class="sec">Appendix A — Methodology</h2>
+    <p>Assessment synthesised from graded multi-source reporting under standard analytic tradecraft.</p>
+  </section>
+</body>
+</html>

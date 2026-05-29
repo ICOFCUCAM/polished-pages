@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sovereign-dispatch.dev/ddm/v1.0/document.json",
+  "title": "DispatchDocument",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ddmVersion", "docType", "metadata", "classification", "sections"],
+  "properties": {
+    "ddmVersion": { "const": "1.0" },
+    "documentId": { "type": "string", "format": "uuid" },
+    "docType": {
+      "type": "string",
+      "enum": ["executive_briefing","situation_report","intelligence_briefing","policy_paper",
+               "ministerial_report","strategic_memorandum","board_report","regulatory_response",
+               "research_dossier","investor_update","proposal_package"]
+    },
+    "locale": { "type": "string", "pattern": "^[a-z]{2}(-[A-Z]{2})?$", "default": "en-GB" },
+    "metadata": { "$ref": "#/$defs/Metadata" },
+    "classification": { "$ref": "#/$defs/Classification" },
+    "branding": { "$ref": "#/$defs/BrandingRef" },
+    "summary": { "type": ["string","null"], "maxLength": 5000 },
+    "sections": { "type": "array", "minItems": 1, "maxItems": 80, "items": { "$ref": "#/$defs/Section" } },
+    "citations":  { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/Citation" } },
+    "evidence":   { "type": "array", "maxItems": 50,  "items": { "$ref": "#/$defs/Evidence" } },
+    "appendices": { "type": "array", "maxItems": 40,  "items": { "$ref": "#/$defs/Section" } },
+    "signatures": { "type": "array", "maxItems": 20,  "items": { "$ref": "#/$defs/Signature" } }
+  },
+  "$defs": {
+    "Metadata": {
+      "type": "object", "additionalProperties": false,
+      "required": ["title","date","status"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "subtitle": { "type": ["string","null"], "maxLength": 300 },
+        "authors": { "type": "array", "maxItems": 20, "items": {
+          "type": "object", "additionalProperties": false, "required": ["name"],
+          "properties": {
+            "name": { "type": "string", "maxLength": 200 },
+            "title": { "type": ["string","null"], "maxLength": 200 },
+            "org": { "type": ["string","null"], "maxLength": 200 }
+          }
+        }},
+        "owningBody": { "type": ["string","null"], "maxLength": 200 },
+        "audience": { "type": ["string","null"], "maxLength": 300 },
+        "referenceCode": { "type": ["string","null"], "maxLength": 100 },
+        "date": { "type": "string", "format": "date" },
+        "version": { "type": ["string","null"], "maxLength": 50 },
+        "status": { "type": "string", "enum": ["draft","review","final"] },
+        "distribution": { "type": "array", "maxItems": 100, "items": { "type": "string", "maxLength": 200 } }
+      }
+    },
+    "Classification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scheme","level"],
+      "properties": {
+        "scheme": { "type": "string", "enum": ["none","corporate","uk_gov","nato"] },
+        "level": { "type": "string", "maxLength": 50 },
+        "caveats": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 50 } },
+        "handling": { "type": ["string","null"], "maxLength": 300 },
+        "portionMarking": { "type": "boolean", "default": false },
+        "declassifyOn": { "type": ["string","null"], "format": "date" }
+      }
+    },
+    "BrandingRef": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "orgId": { "type": ["string","null"], "format": "uuid" },
+        "themeRef": { "type": ["string","null"], "maxLength": 100 },
+        "overrides": { "type": "object", "additionalProperties": { "type": "string" } }
+      }
+    },
+    "Section": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","heading","level","blocks"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$" },
+        "heading": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "level": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "kind": { "type": "string", "enum": ["body","appendix","annex"], "default": "body" },
+        "role": { "type": ["string","null"], "maxLength": 50 },
+        "order": { "type": "integer" },
+        "blocks": { "type": "array", "maxItems": 400, "items": { "$ref": "#/$defs/Block" } }
+      }
+    },
+    "Block": {
+      "type": "object",
+      "required": ["id","type"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$" },
+        "type": { "type": "string", "enum": ["paragraph","bullets","table","kpi","chart",
+                  "quote","callout","timeline","image","reference","pagebreak","signature"] }
+      },
+      "oneOf": [
+        { "$ref": "#/$defs/Paragraph" }, { "$ref": "#/$defs/Bullets" },
+        { "$ref": "#/$defs/Table" },     { "$ref": "#/$defs/Kpi" },
+        { "$ref": "#/$defs/Chart" },     { "$ref": "#/$defs/Quote" },
+        { "$ref": "#/$defs/Callout" },   { "$ref": "#/$defs/Timeline" },
+        { "$ref": "#/$defs/Image" },     { "$ref": "#/$defs/Reference" },
+        { "$ref": "#/$defs/PageBreak" }, { "$ref": "#/$defs/SignatureBlock" }
+      ]
+    },
+    "Paragraph": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","text"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "paragraph" },
+        "text": { "type": "string", "maxLength": 5000 },
+        "style": { "type": "string", "enum": ["normal","lead","note"], "default": "normal" }
+      }
+    },
+    "Bullets": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","items"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "bullets" },
+        "ordered": { "type": "boolean", "default": false },
+        "items": { "type": "array", "minItems": 1, "maxItems": 100, "items": { "$ref": "#/$defs/BulletItem" } }
+      }
+    },
+    "BulletItem": {
+      "type": "object", "additionalProperties": false, "required": ["text"],
+      "properties": {
+        "text": { "type": "string", "maxLength": 2000 },
+        "citeId": { "type": ["string","null"] },
+        "children": { "type": "array", "maxItems": 50, "items": { "$ref": "#/$defs/BulletItem" } }
+      }
+    },
+    "Table": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","columns","rows"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "table" },
+        "caption": { "type": ["string","null"], "maxLength": 300 },
+        "columns": {
+          "type": "array", "minItems": 1, "maxItems": 40,
+          "items": { "type": "object", "additionalProperties": false, "required": ["key","label"],
+            "properties": {
+              "key": { "type": "string", "maxLength": 64 },
+              "label": { "type": "string", "maxLength": 200 },
+              "align": { "type": "string", "enum": ["left","center","right"], "default": "left" },
+              "width": { "type": ["number","null"], "minimum": 0 }
+            }
+          }
+        },
+        "rows": {
+          "type": "array", "maxItems": 500,
+          "items": { "type": "array", "maxItems": 40, "items": { "$ref": "#/$defs/Cell" } }
+        },
+        "footnotes": { "type": "array", "maxItems": 20, "items": { "type": "string", "maxLength": 500 } }
+      }
+    },
+    "Cell": {
+      "type": "object", "additionalProperties": false, "required": ["text"],
+      "properties": {
+        "text": { "type": "string", "maxLength": 1000 },
+        "colspan": { "type": "integer", "minimum": 1, "maximum": 40, "default": 1 },
+        "rowspan": { "type": "integer", "minimum": 1, "maximum": 500, "default": 1 },
+        "align": { "type": "string", "enum": ["left","center","right"] },
+        "emphasis": { "type": "string", "enum": ["none","bold","header"], "default": "none" }
+      }
+    },
+    "Kpi": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","items"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "kpi" },
+        "items": { "type": "array", "minItems": 1, "maxItems": 12, "items": {
+          "type": "object", "additionalProperties": false, "required": ["label","value"],
+          "properties": {
+            "label": { "type": "string", "maxLength": 100 },
+            "value": { "type": "string", "maxLength": 50 },
+            "unit": { "type": ["string","null"], "maxLength": 20 },
+            "delta": { "type": ["string","null"], "maxLength": 50 },
+            "trend": { "type": ["string","null"], "enum": ["up","down","flat",null] }
+          }
+        }}
+      }
+    },
+    "Chart": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","chartType","spec"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "chart" },
+        "caption": { "type": ["string","null"], "maxLength": 300 },
+        "chartType": { "type": "string", "enum": ["bar","line","pie","area"] },
+        "fallback": { "type": "string", "enum": ["table","image","none"], "default": "table" },
+        "spec": {
+          "type": "object", "additionalProperties": false, "required": ["data","series"],
+          "properties": {
+            "xKey": { "type": "string", "maxLength": 64 },
+            "labelKey": { "type": "string", "maxLength": 64 },
+            "series": { "type": "array", "minItems": 1, "maxItems": 8, "items": {
+              "type": "object", "additionalProperties": false, "required": ["key","label"],
+              "properties": {
+                "key": { "type": "string", "maxLength": 64 },
+                "label": { "type": "string", "maxLength": 100 }
+              }
+            }},
+            "data": { "type": "array", "minItems": 1, "maxItems": 200,
+              "items": { "type": "object", "additionalProperties": { "type": ["string","number"] } } }
+          }
+        }
+      }
+    },
+    "Quote": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","text"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "quote" },
+        "text": { "type": "string", "maxLength": 3000 },
+        "attribution": { "type": ["string","null"], "maxLength": 200 },
+        "citeId": { "type": ["string","null"] }
+      }
+    },
+    "Callout": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","style","text"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "callout" },
+        "style": { "type": "string", "enum": ["info","warning","risk","recommendation"] },
+        "title": { "type": ["string","null"], "maxLength": 200 },
+        "text": { "type": "string", "maxLength": 3000 }
+      }
+    },
+    "Timeline": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","events"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "timeline" },
+        "events": { "type": "array", "minItems": 1, "maxItems": 100, "items": {
+          "type": "object", "additionalProperties": false, "required": ["ts","label"],
+          "properties": {
+            "ts": { "type": "string", "maxLength": 50 },
+            "label": { "type": "string", "maxLength": 200 },
+            "detail": { "type": ["string","null"], "maxLength": 1000 }
+          }
+        }}
+      }
+    },
+    "Image": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","altText"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "image" },
+        "evidenceId": { "type": ["string","null"] },
+        "src": { "type": ["string","null"], "format": "uri" },
+        "caption": { "type": ["string","null"], "maxLength": 300 },
+        "credit": { "type": ["string","null"], "maxLength": 200 },
+        "altText": { "type": "string", "minLength": 1, "maxLength": 500 }
+      },
+      "anyOf": [ { "required": ["evidenceId"] }, { "required": ["src"] } ]
+    },
+    "Reference": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","citeId"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "reference" },
+        "citeId": { "type": "string" }
+      }
+    },
+    "PageBreak": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type"],
+      "properties": { "id": { "type": "string" }, "type": { "const": "pagebreak" } }
+    },
+    "SignatureBlock": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","signatureRef"],
+      "properties": {
+        "id": { "type": "string" }, "type": { "const": "signature" },
+        "signatureRef": { "type": "string" }
+      }
+    },
+    "Citation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","type","title"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$" },
+        "type": { "type": "string", "enum": ["document","article","web","dataset","testimony","exhibit"] },
+        "title": { "type": "string", "maxLength": 500 },
+        "authors": { "type": "array", "maxItems": 30, "items": { "type": "string", "maxLength": 200 } },
+        "publisher": { "type": ["string","null"], "maxLength": 200 },
+        "url": { "type": ["string","null"], "format": "uri" },
+        "publishedDate": { "type": ["string","null"], "maxLength": 50 },
+        "accessedDate": { "type": ["string","null"], "format": "date" },
+        "locator": { "type": ["string","null"], "maxLength": 100 },
+        "sourceGrading": { "type": ["string","null"], "maxLength": 10 }
+      }
+    },
+    "Evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","kind"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$" },
+        "kind": { "type": "string", "enum": ["image","dataset","document","exhibit"] },
+        "storageRef": { "type": ["string","null"], "maxLength": 500 },
+        "src": { "type": ["string","null"], "format": "uri" },
+        "caption": { "type": ["string","null"], "maxLength": 300 },
+        "credit": { "type": ["string","null"], "maxLength": 200 },
+        "altText": { "type": ["string","null"], "maxLength": 500 },
+        "sha256": { "type": ["string","null"], "pattern": "^[a-f0-9]{64}$" },
+        "classification": { "$ref": "#/$defs/Classification" },
+        "chainOfCustody": { "type": "array", "maxItems": 100, "items": {
+          "type": "object", "additionalProperties": false, "required": ["actor","action","ts"],
+          "properties": {
+            "actor": { "type": "string", "maxLength": 200 },
+            "action": { "type": "string", "maxLength": 200 },
+            "ts": { "type": "string", "format": "date-time" }
+          }
+        }}
+      }
+    },
+    "Signature": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id","name"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$" },
+        "name": { "type": "string", "maxLength": 200 },
+        "title": { "type": ["string","null"], "maxLength": 200 },
+        "line": { "type": ["string","null"], "maxLength": 300 },
+        "signedAt": { "type": ["string","null"], "format": "date-time" },
+        "method": { "type": "string", "enum": ["wet","digital","none"], "default": "none" }
+      }
+    }
+  }
+}

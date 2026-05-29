@@ -1,0 +1,35 @@
+{
+  "spike": "SPK-A",
+  "generatedAt": "2026-05-29T11:28:36.695Z",
+  "chromiumBinary": "/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell",
+  "artifact": {
+    "path": "/home/user/polished-pages/spikes/spk-a-chromium/out-1.pdf",
+    "sizeBytes": 109871,
+    "isPdf": true,
+    "pages": 3,
+    "sha256": "b9ed027c078d3e8b414510a3ef5864053503115443fa15cdbc1f2e3e1f8b9b7c"
+  },
+  "determinism": {
+    "rawSha": [
+      "b9ed027c078d3e8b414510a3ef5864053503115443fa15cdbc1f2e3e1f8b9b7c",
+      "b9ed027c078d3e8b414510a3ef5864053503115443fa15cdbc1f2e3e1f8b9b7c",
+      "b9ed027c078d3e8b414510a3ef5864053503115443fa15cdbc1f2e3e1f8b9b7c"
+    ],
+    "normalizedSha": [
+      "c246974e090c4756e9047d3f0e0fb10d85eae0d60701070128f47a74f00ebdb5",
+      "c246974e090c4756e9047d3f0e0fb10d85eae0d60701070128f47a74f00ebdb5",
+      "c246974e090c4756e9047d3f0e0fb10d85eae0d60701070128f47a74f00ebdb5"
+    ],
+    "deterministicAfterTimestampNormalization": true
+  },
+  "performance": {
+    "warmRenderMsApprox": 264,
+    "totalMs": 852
+  },
+  "checks": {
+    "produces valid PDF": true,
+    "multi-page (>=2: cover+toc+body)": true,
+    "non-empty artifact": true,
+    "deterministic (normalized)": true
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@sovereign-dispatch/spk-a-chromium",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SPK-A: headless Chromium HTML->PDF render spike (ADR-001 / B1).",
+  "scripts": { "spike": "node run.mjs" }
+}

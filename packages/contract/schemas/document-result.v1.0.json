@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.sovereign-dispatch.dev/contract/v1.0/document-result.json",
+  "title": "DocumentResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "requestId", "jobId", "status", "engineVersion", "artifacts"],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "requestId": { "type": "string", "format": "uuid" },
+    "jobId": { "type": "string", "format": "uuid" },
+    "status": { "type": "string", "enum": ["succeeded", "failed", "partial"] },
+    "engineVersion": { "type": "string" },
+    "templateBinding": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "properties": {
+        "docType": { "type": "string" },
+        "template": { "type": "string" },
+        "version": { "type": "integer" }
+      }
+    },
+    "artifacts": { "type": "array", "items": { "$ref": "#/$defs/ArtifactRef" } },
+    "warnings": { "type": "array", "items": { "$ref": "#/$defs/Warning" } },
+    "error": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/Error" }] },
+    "renderLog": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "durationMs": { "type": "integer" },
+        "blocksRendered": { "type": "integer" },
+        "pages": { "type": ["integer", "null"] }
+      }
+    },
+    "audit": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "eventId": { "type": "string" },
+        "actor": { "type": "string" },
+        "ts": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "$defs": {
+    "ArtifactRef": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifactId", "role", "format", "sizeBytes", "sha256", "classification", "storage"],
+      "properties": {
+        "artifactId": { "type": "string", "format": "uuid" },
+        "role": { "type": "string", "enum": ["primary"] },
+        "format": { "type": "string", "enum": ["pdf", "docx", "md"] },
+        "sizeBytes": { "type": "integer", "minimum": 0 },
+        "pages": { "type": ["integer", "null"] },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "classification": { "type": "string" },
+        "storage": { "type": "string", "enum": ["signed_url"] },
+        "url": { "type": ["string", "null"], "format": "uri" },
+        "expiresAt": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "Warning": {
+      "type": "object", "additionalProperties": false, "required": ["code", "detail"],
+      "properties": {
+        "code": { "type": "string", "enum": ["BLOCK_FALLBACK", "CHART_RASTERIZED", "MISSING_ALT_TEXT",
+                  "CLASSIFICATION_IGNORED_FIELD", "TRUNCATED", "TTL_CAPPED", "UNUSED_CITATION",
+                  "BLOCK_DISCOURAGED", "ASSET_MISSING", "DOCX_DEGRADED"] },
+        "blockId": { "type": ["string", "null"] },
+        "detail": { "type": "string" }
+      }
+    },
+    "Error": {
+      "type": "object", "additionalProperties": false, "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "field": { "type": ["string", "null"] },
+        "requestId": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
